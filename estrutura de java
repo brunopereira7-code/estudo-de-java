@@ -1,1 +1,275 @@
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
 
+// 1. O NOSSO MOLDE (Classe)
+class Aviao {
+    // Atributos (dados que o avião guarda)
+    // O "private" impede que outras partes do código alterem isso sem permissão
+    private int numero;
+    private int assentosDisponiveis;
+    private List<String> passageiros; // Cada avião guarda sua própria lista de passageiros!
+
+    // Construtor (o que acontece quando um avião "nasce")
+    public Aviao(int numero) {
+        this.numero = numero;
+        this.assentosDisponiveis = 0; // Começa sem assentos definidos
+        this.passageiros = new ArrayList<>(); // Cria a lista de passageiros vazia
+    }
+
+    // Getters e Setters (portas de acesso controladas para os dados privados)
+    public int getNumero() {
+        return numero;
+    }
+
+    public int getAssentosDisponiveis() {
+        return assentosDisponiveis;
+    }
+
+    public void setAssentosDisponiveis(int assentosDisponiveis) {
+        this.assentosDisponiveis = assentosDisponiveis;
+    }
+
+    public List<String> getPassageiros() {
+        return passageiros;
+    }
+
+    // Comportamento: O próprio avião sabe como registrar uma reserva
+    public boolean fazerReserva(String nomePassageiro) {
+        if (assentosDisponiveis > 0) {
+            passageiros.add(nomePassageiro);
+            assentosDisponiveis--; // O próprio avião desconta a vaga
+            return true;
+        }
+        return false;
+    }
+
+    // Comportamento: O avião sabe procurar se um passageiro está nele
+    public boolean possuiPassageiro(String nomeBusca) {
+        for (String passageiro : passageiros) {
+            if (passageiro.equalsIgnoreCase(nomeBusca)) {
+                return true;
+            }
+        }
+        return false;
+    }
+}
+
+
+// 2. O SISTEMA PRINCIPAL (Menu)
+public class SweetFlightOOP {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        
+        // Em vez de vários arrays, temos UMA lista que guarda "Objetos do tipo Aviao"
+        List<Aviao> frota = new ArrayList<>();
+        int totalReservasSistema = 0;
+        final int LIMITE_RESERVAS = 20;
+        final int LIMITE_AVIOES = 4;
+
+        while (true) {
+            System.out.println("\n=========================================");
+            System.out.println("   SWEET FLIGHT – SISTEMA DE RESERVAS (OO)");
+            System.out.println("=========================================");
+            System.out.println("1 - Cadastrar aviões");
+            System.out.println("2 - Cadastrar quantidade de assentos");
+            System.out.println("3 - Listar aviões");
+            System.out.println("4 - Realizar reserva");
+            System.out.println("5 - Consultar reservas de um avião");
+            System.out.println("6 - Pesquisar passageiro");
+            System.out.println("7 - Mostrar resumo");
+            System.out.println("8 - Sair");
+            System.out.print("\nEscolha uma opção: ");
+
+            int opcao;
+            try {
+                opcao = Integer.parseInt(sc.nextLine());
+            } catch (NumberFormatException e) {
+                opcao = 0;
+            }
+
+            if (opcao < 1 || opcao > 8) {
+                System.out.println("Opção inválida!");
+                continue;
+            }
+
+            if (opcao == 8) {
+                System.out.println("Sistema encerrado. Até logo!");
+                break;
+            }
+
+            switch (opcao) {
+                case 1:
+                    int qtd = 0;
+                    while (qtd < 1 || qtd > LIMITE_AVIOES) {
+                        System.out.print("Quantos aviões deseja cadastrar (1 a 4)? ");
+                        qtd = Integer.parseInt(sc.nextLine());
+                    }
+
+                    frota.clear(); // Limpa a frota caso o usuário cadastre de novo
+
+                    for (int i = 0; i < qtd; i++) {
+                        boolean repetido;
+                        int numeroAviao;
+                        do {
+                            repetido = false;
+                            System.out.print("Digite o número do avião " + (i + 1) + ": ");
+                            numeroAviao = Integer.parseInt(sc.nextLine());
+
+                            // Procura na lista de objetos se já existe um avião com esse número
+                            for (Aviao aviaoExistente : frota) {
+                                if (aviaoExistente.getNumero() == numeroAviao) {
+                                    System.out.println("Este número já existe! Tente outro.");
+                                    repetido = true;
+                                    break;
+                                }
+                            }
+                        } while (repetido);
+
+                        // Mágica da OO: Criamos o objeto "Aviao" e jogamos na lista
+                        frota.add(new Aviao(numeroAviao));
+                    }
+                    System.out.println("Aviões cadastrados com sucesso!");
+                    break;
+
+                case 2:
+                    if (frota.isEmpty()) {
+                        System.out.println("Nenhum avião cadastrado ainda.");
+                        break;
+                    }
+
+                    // For-each: "Para cada aviao dentro da frota, faça isso:"
+                    for (Aviao aviao : frota) {
+                        int assentos = -1;
+                        while (assentos < 0 || assentos > 20) {
+                            System.out.print("Quantos assentos para o avião " + aviao.getNumero() + " (0 a 20)? ");
+                            assentos = Integer.parseInt(sc.nextLine());
+                        }
+                        aviao.setAssentosDisponiveis(assentos);
+                    }
+                    System.out.println("Assentos cadastrados com sucesso!");
+                    break;
+
+                case 3:
+                    if (frota.isEmpty()) {
+                        System.out.println("Nenhum avião cadastrado.");
+                    } else {
+                        for (Aviao aviao : frota) {
+                            System.out.println("Avião: " + aviao.getNumero() + " | Assentos disponíveis: " + aviao.getAssentosDisponiveis());
+                        }
+                    }
+                    break;
+
+                case 4:
+                    if (totalReservasSistema >= LIMITE_RESERVAS) {
+                        System.out.println("Limite máximo de reservas no sistema atingido!");
+                        break;
+                    }
+
+                    System.out.print("Informe o número do avião desejado: ");
+                    int aviaoDesejado = Integer.parseInt(sc.nextLine());
+
+                    Aviao aviaoEncontrado = null;
+                    for (Aviao aviao : frota) {
+                        if (aviao.getNumero() == aviaoDesejado) {
+                            aviaoEncontrado = aviao;
+                            break;
+                        }
+                    }
+
+                    if (aviaoEncontrado == null) {
+                        System.out.println("Este avião não existe!");
+                    } else if (aviaoEncontrado.getAssentosDisponiveis() <= 0) {
+                        System.out.println("Não há assentos disponíveis para este avião!");
+                    } else {
+                        String nomePassageiro = "";
+                        while (nomePassageiro.trim().isEmpty()) {
+                            System.out.print("Digite o nome do passageiro: ");
+                            nomePassageiro = sc.nextLine();
+                        }
+
+                        // Pedimos para o objeto avião fazer a reserva. Ele se vira!
+                        aviaoEncontrado.fazerReserva(nomePassageiro);
+                        totalReservasSistema++;
+                        
+                        System.out.println("Reserva realizada com sucesso!");
+                    }
+                    break;
+
+                case 5:
+                    System.out.print("Informe o número do avião: ");
+                    int numAviaoConsulta = Integer.parseInt(sc.nextLine());
+                    
+                    boolean achouAviao = false;
+                    for (Aviao aviao : frota) {
+                        if (aviao.getNumero() == numAviaoConsulta) {
+                            achouAviao = true;
+                            if (aviao.getPassageiros().isEmpty()) {
+                                System.out.println("Não há reservas realizadas para este avião!");
+                            } else {
+                                System.out.println("Passageiros do voo " + aviao.getNumero() + ":");
+                                for (String passageiro : aviao.getPassageiros()) {
+                                    System.out.println("- " + passageiro);
+                                }
+                            }
+                            break;
+                        }
+                    }
+                    if (!achouAviao) System.out.println("Este avião não existe!");
+                    break;
+
+                case 6:
+                    System.out.print("Digite o nome do passageiro: ");
+                    String nomeBusca = sc.nextLine();
+
+                    boolean passageiroEncontrado = false;
+                    for (Aviao aviao : frota) {
+                        // Delegamos a responsabilidade da busca para o objeto avião
+                        if (aviao.possuiPassageiro(nomeBusca)) {
+                            System.out.println("Reserva encontrada no avião: " + aviao.getNumero());
+                            passageiroEncontrado = true;
+                        }
+                    }
+
+                    if (!passageiroEncontrado) {
+                        System.out.println("Não há reservas realizadas para este passageiro!");
+                    }
+                    break;
+
+                case 7:
+                    int assentosTotais = 0;
+                    int avioesComAssento = 0;
+                    int avioesSemAssento = 0;
+                    int maiorQtdAssentos = -1;
+                    int aviaoMaiorAssento = -1;
+
+                    for (Aviao aviao : frota) {
+                        assentosTotais += aviao.getAssentosDisponiveis();
+
+                        if (aviao.getAssentosDisponiveis() > 0) {
+                            avioesComAssento++;
+                        } else {
+                            avioesSemAssento++;
+                        }
+
+                        if (aviao.getAssentosDisponiveis() > maiorQtdAssentos) {
+                            maiorQtdAssentos = aviao.getAssentosDisponiveis();
+                            aviaoMaiorAssento = aviao.getNumero();
+                        }
+                    }
+
+                    System.out.println("\n--- RESUMO ---");
+                    System.out.println("Aviões cadastrados: " + frota.size());
+                    System.out.println("Total de reservas realizadas: " + totalReservasSistema);
+                    System.out.println("Total de assentos disponíveis: " + assentosTotais);
+                    System.out.println("Aviões com assentos disponíveis: " + avioesComAssento);
+                    System.out.println("Aviões sem assentos disponíveis: " + avioesSemAssento);
+                    if (!frota.isEmpty()) {
+                        System.out.println("Avião com maior quantidade de assentos: " + aviaoMaiorAssento + " (" + maiorQtdAssentos + " assentos)");
+                    }
+                    break;
+            }
+        }
+        sc.close();
+    }
+}
