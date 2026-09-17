@@ -1,0 +1,16 @@
+public class Retangulo extends FormaGeometrica {
+    private double comprimento;
+    private double largura;
+
+    public Retangulo(double base, double altura) {
+        this.comprimento = comprimento;
+        this.largura = largura;
+    }
+
+
+    public double calcularArea() {
+        return comprimento*largura;
+    }
+
+    
+}
